@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Hunt Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #222; color: #fff; margin: 0; padding: 0; }
+        #menuScreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        #gameBoard { position: relative; width: 600px; height: 400px; background: #333; margin: 40px auto; border: 2px solid #fff; overflow: hidden; }
+        .ghost {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2em;
+            background: #fff;
+            border-radius: 50%;
+            border: 2px solid #aaa;
+            cursor: pointer;
+            user-select: none;
+        }
+        #scoreDisplay, #timeDisplay { font-size: 1.5em; margin: 0 20px; }
+        #hud { display: flex; justify-content: center; align-items: center; margin-top: 10px; }
+        button { font-size: 1.2em; padding: 10px 30px; margin: 10px; border: none; border-radius: 8px; background: #4caf50; color: #fff; cursor: pointer; }
+        button:hover { background: #388e3c; }
+    </style>
+</head>
+<body>
+    <div id="menuScreen">
+        <h1>Ghost Hunt Game</h1>
+        <button id="startBtn">Start Game</button>
+        <button id="newGameBtn">New Game</button>
+    </div>
+    <div id="hud">
+        <span id="scoreDisplay">Score: 0</span>
+        <span id="highScoreDisplay">High Score: 0</span>
+        <span id="timeDisplay">Time: 60s</span>
+    </div>
+    <div id="gameBoard"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get DOM elements
+    const startBtn = document.getElementById('startBtn');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const menuScreen = document.getElementById('menuScreen');
+    const gameBoard = document.getElementById('gameBoard');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const highScoreDisplay = document.getElementById('highScoreDisplay');
+    const timeDisplay = document.getElementById('timeDisplay');
+
+    let score = 0;
+    let highScore = parseInt(localStorage.getItem('ghostHuntHighScore')) || 0;
+    let timeLeft = 60;
+    let ghostInterval;
+    let gameTimer;
+
+    // Initialize high score display
+    highScoreDisplay.textContent = `High Score: ${highScore}`;
+
+    function spawnGhost() {
+        const ghost = document.createElement('div');
+        ghost.className = 'ghost';
+        ghost.style.position = 'absolute';
+        ghost.style.left = Math.random() * (gameBoard.offsetWidth - 50) + 'px';
+        ghost.style.top = Math.random() * (gameBoard.offsetHeight - 50) + 'px';
+        ghost.textContent = '👻';
+        ghost.addEventListener('click', function() {
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('ghostHuntHighScore', highScore);
+                highScoreDisplay.textContent = `High Score: ${highScore}`;
+            }
+            gameBoard.removeChild(ghost);
+        });
+        gameBoard.appendChild(ghost);
+    }
+
+    function updateTimer() {
+        timeLeft--;
+        timeDisplay.textContent = `Time: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+            endGame();
+        }
+    }
+
+    function startGame() {
+        score = 0;
+        timeLeft = 60;
+        scoreDisplay.textContent = `Score: ${score}`;
+        timeDisplay.textContent = `Time: ${timeLeft}s`;
+        highScoreDisplay.textContent = `High Score: ${highScore}`;
+
+        // Clear existing ghosts
+        while (gameBoard.firstChild) {
+            gameBoard.removeChild(gameBoard.firstChild);
+        }
+
+        menuScreen.style.display = 'none';
+        ghostInterval = setInterval(spawnGhost, 1000);
+        gameTimer = setInterval(updateTimer, 1000);
+    }
+
+    function endGame() {
+        clearInterval(ghostInterval);
+        clearInterval(gameTimer);
+        menuScreen.style.display = 'flex';
+    }
+
+    // Event Listeners
+    startBtn.addEventListener('click', startGame);
+    newGameBtn.addEventListener('click', startGame);
+});
+</script>
+</body>
+</html>
